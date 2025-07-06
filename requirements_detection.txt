@@ -1,0 +1,13 @@
+# Dépendances supplémentaires pour le système de détection de feuilles
+# À installer avec : pip install -r requirements_detection.txt
+
+# Vision et traitement d'image
+opencv-python==4.8.1.78
+numpy>=1.24.3
+
+# Communication réseau
+python-socketio>=5.11.1
+requests>=2.31.0
+
+# Communication PLC (déjà présent dans l'environnement)
+# fins>=1.0.0 websocket-client==1.8.0

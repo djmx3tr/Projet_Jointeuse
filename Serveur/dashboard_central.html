@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Production - Supervision Centrale</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            overflow-x: auto;
+        }
+        
+        .header {
+            background: #1a252f;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            color: #f39c12;
+            margin-bottom: 10px;
+        }
+        
+        .header .subtitle {
+            font-size: 1.2em;
+            color: #bdc3c7;
+        }
+        
+        .status-bar {
+            background: #34495e;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f39c12;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-online { background: #2ecc71; }
+        .status-offline { background: #e74c3c; }
+        .status-warning { background: #f39c12; }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .machines-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding: 20px;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        
+        .machine-card {
+            background: #2c3e50;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .machine-card.online {
+            border-color: #2ecc71;
+        }
+        
+        .machine-card.offline {
+            border-color: #e74c3c;
+            opacity: 0.7;
+        }
+        
+        .machine-card.warning {
+            border-color: #f39c12;
+        }
+        
+        .machine-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #34495e;
+        }
+        
+        .machine-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #f39c12;
+        }
+        
+        .machine-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #34495e;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #3498db;
+        }
+        
+        .stat-card.feuilles {
+            border-left-color: #2ecc71;
+        }
+        
+        .stat-card.joints {
+            border-left-color: #3498db;
+        }
+        
+        .stat-card.arrets {
+            border-left-color: #e74c3c;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #bdc3c7;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            background: #34495e;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .chart-title {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #f39c12;
+            font-weight: bold;
+        }
+        
+        .summary-panel {
+            background: #1a252f;
+            margin: 20px;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        .summary-title {
+            font-size: 1.8em;
+            color: #f39c12;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2em;
+            color: #bdc3c7;
+        }
+        
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .last-update {
+            font-size: 0.8em;
+            color: #7f8c8d;
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .machines-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏭 Dashboard Production</h1>
+        <div class="subtitle">Supervision Centrale - 4 Machines Jointeuses</div>
+    </div>
+    
+    <div class="status-bar">
+        <div class="status-item">
+            <div class="status-dot status-online"></div>
+            <span>Système Opérationnel</span>
+        </div>
+        <div class="status-item">
+            <span id="current-time">--:--:--</span>
+        </div>
+        <div class="status-item">
+            <span>Machines: <span id="machines-online">0</span>/4</span>
+        </div>
+        <div class="status-item">
+            <span>Dernière MAJ: <span id="last-update">--:--</span></span>
+        </div>
+    </div>
+    
+    <div class="summary-panel">
+        <div class="summary-title">📊 Résumé Global - Aujourd'hui</div>
+        <div class="summary-stats" id="global-stats">
+            <div class="stat-card feuilles">
+                <div class="stat-value" id="total-feuilles">0</div>
+                <div class="stat-label">Feuilles Totales</div>
+            </div>
+            <div class="stat-card joints">
+                <div class="stat-value" id="total-joints">0</div>
+                <div class="stat-label">Joints Totaux</div>
+            </div>
+            <div class="stat-card arrets">
+                <div class="stat-value" id="total-arrets">0</div>
+                <div class="stat-label">Arrêts (min)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avg-performance">0%</div>
+                <div class="stat-label">Performance Moyenne</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="machines-grid" id="machines-container">
+        <!-- Les cartes des machines seront générées dynamiquement -->
+    </div>
+    
+    <script>
+        class DashboardCentral {
+            constructor() {
+                // Configuration des machines (à adapter selon vos IPs)
+                this.machines = [
+                    { id: 'L1', name: 'Jointeuse L1', ip: '192.168.0.88', port: 5001, location: 'Atelier Principal' },
+                    { id: 'L2', name: 'Jointeuse L2', ip: '192.168.0.89', port: 5001, location: 'Atelier Principal' },
+                    { id: 'L3', name: 'Jointeuse L3', ip: '192.168.0.90', port: 5001, location: 'Atelier Secondaire' },
+                    { id: 'L4', name: 'Jointeuse L4', ip: '192.168.0.91', port: 5001, location: 'Atelier Secondaire' }
+                ];
+                
+                this.machinesData = {};
+                this.charts = {};
+                this.updateInterval = 30000; // 30 secondes
+                
+                this.init();
+            }
+            
+            init() {
+                this.createMachineCards();
+                this.startAutoUpdate();
+                this.updateTime();
+                setInterval(() => this.updateTime(), 1000);
+            }
+            
+            createMachineCards() {
+                const container = document.getElementById('machines-container');
+                container.innerHTML = '';
+                
+                this.machines.forEach(machine => {
+                    const card = document.createElement('div');
+                    card.className = 'machine-card offline';
+                    card.id = `machine-${machine.id}`;
+                    
+                    card.innerHTML = `
+                        <div class="machine-header">
+                            <div class="machine-title">${machine.name}</div>
+                            <div class="machine-status">
+                                <div class="status-dot status-offline" id="status-${machine.id}"></div>
+                                <span id="status-text-${machine.id}">Hors ligne</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-row">
+                            <div class="stat-card feuilles">
+                                <div class="stat-value" id="feuilles-${machine.id}">0</div>
+                                <div class="stat-label">Feuilles/jour</div>
+                            </div>
+                            <div class="stat-card joints">
+                                <div class="stat-value" id="joints-${machine.id}">0</div>
+                                <div class="stat-label">Joints/jour</div>
+                            </div>
+                            <div class="stat-card arrets">
+                                <div class="stat-value" id="arrets-${machine.id}">0</div>
+                                <div class="stat-label">Arrêts (min)</div>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <div class="chart-title">Production Horaire</div>
+                            <canvas id="chart-${machine.id}"></canvas>
+                        </div>
+                        
+                        <div class="last-update" id="update-${machine.id}">
+                            Dernière mise à jour: --:--
+                        </div>
+                    `;
+                    
+                    container.appendChild(card);
+                    
+                    // Créer le graphique pour cette machine
+                    this.createChart(machine.id);
+                });
+            }
+            
+            createChart(machineId) {
+                const ctx = document.getElementById(`chart-${machineId}`).getContext('2d');
+                
+                this.charts[machineId] = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['7h', '8h', '9h', '10h', '11h', '12h', '13h', '14h', '15h', '16h', '17h', '18h', '19h', '20h', '21h'],
+                        datasets: [
+                            {
+                                label: 'Feuilles',
+                                data: new Array(15).fill(0),
+                                backgroundColor: '#2ecc71',
+                                borderColor: '#27ae60',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Joints Moy.',
+                                data: new Array(15).fill(0),
+                                backgroundColor: '#3498db',
+                                borderColor: '#2980b9',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Arrêts (min)',
+                                data: new Array(15).fill(0),
+                                backgroundColor: '#e74c3c',
+                                borderColor: '#c0392b',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'white'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    color: 'white'
+                                },
+                                grid: {
+                                    color: 'rgba(255,255,255,0.1)'
+                                }
+                            },
+                            y: {
+                                ticks: {
+                                    color: 'white'
+                                },
+                                grid: {
+                                    color: 'rgba(255,255,255,0.1)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            async fetchMachineData(machine) {
+                try {
+                    const response = await fetch(`http://${machine.ip}:${machine.port}/api/production/full`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        timeout: 5000
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    return { success: true, data: data };
+                    
+                } catch (error) {
+                    console.error(`Erreur machine ${machine.id}:`, error);
+                    return { success: false, error: error.message };
+                }
+            }
+            
+            async updateAllMachines() {
+                let onlineCount = 0;
+                const promises = this.machines.map(machine => this.fetchMachineData(machine));
+                const results = await Promise.allSettled(promises);
+                
+                results.forEach((result, index) => {
+                    const machine = this.machines[index];
+                    
+                    if (result.status === 'fulfilled' && result.value.success) {
+                        onlineCount++;
+                        this.updateMachineDisplay(machine, result.value.data);
+                        this.machinesData[machine.id] = result.value.data;
+                    } else {
+                        this.setMachineOffline(machine);
+                    }
+                });
+                
+                // Mettre à jour le compteur de machines en ligne
+                document.getElementById('machines-online').textContent = onlineCount;
+                
+                // Mettre à jour le résumé global
+                this.updateGlobalSummary();
+                
+                // Mettre à jour l'heure de dernière mise à jour
+                document.getElementById('last-update').textContent = new Date().toLocaleTimeString('fr-FR');
+            }
+            
+            updateMachineDisplay(machine, data) {
+                const machineCard = document.getElementById(`machine-${machine.id}`);
+                const statusDot = document.getElementById(`status-${machine.id}`);
+                const statusText = document.getElementById(`status-text-${machine.id}`);
+                
+                // Mettre à jour le statut
+                machineCard.className = 'machine-card online';
+                statusDot.className = 'status-dot status-online';
+                statusText.textContent = 'En ligne';
+                
+                // Mettre à jour les statistiques
+                if (data.current_stats) {
+                    document.getElementById(`feuilles-${machine.id}`).textContent = data.current_stats.feuilles_jour || 0;
+                    document.getElementById(`joints-${machine.id}`).textContent = data.current_stats.joints_jour || 0;
+                    document.getElementById(`arrets-${machine.id}`).textContent = data.current_stats.arrets_jour_min || 0;
+                }
+                
+                // Mettre à jour le graphique
+                if (data.hourly_data && this.charts[machine.id]) {
+                    this.updateChart(machine.id, data.hourly_data, data.projection);
+                }
+                
+                // Mettre à jour l'heure de dernière mise à jour
+                document.getElementById(`update-${machine.id}`).textContent = 
+                    `Dernière mise à jour: ${new Date().toLocaleTimeString('fr-FR')}`;
+            }
+            
+            updateChart(machineId, hourlyData, projection) {
+                const chart = this.charts[machineId];
+                if (!chart) return;
+                
+                // Réinitialiser les données
+                const feuilles = new Array(15).fill(0);
+                const joints = new Array(15).fill(0);
+                const arrets = new Array(15).fill(0);
+                
+                // Remplir avec les données réelles
+                hourlyData.forEach(item => {
+                    if (item.heure >= 7 && item.heure <= 21) {
+                        const index = item.heure - 7;
+                        feuilles[index] = item.feuilles;
+                        joints[index] = item.feuilles > 0 ? (item.joints / item.feuilles).toFixed(1) : 0;
+                        arrets[index] = item.arrets_reels_min;
+                    }
+                });
+                
+                // Mettre à jour le graphique
+                chart.data.datasets[0].data = feuilles;
+                chart.data.datasets[1].data = joints;
+                chart.data.datasets[2].data = arrets;
+                chart.update('none'); // Animation désactivée pour la performance
+            }
+            
+            setMachineOffline(machine) {
+                const machineCard = document.getElementById(`machine-${machine.id}`);
+                const statusDot = document.getElementById(`status-${machine.id}`);
+                const statusText = document.getElementById(`status-text-${machine.id}`);
+                
+                machineCard.className = 'machine-card offline';
+                statusDot.className = 'status-dot status-offline';
+                statusText.textContent = 'Hors ligne';
+                
+                document.getElementById(`update-${machine.id}`).textContent = 
+                    `Hors ligne depuis: ${new Date().toLocaleTimeString('fr-FR')}`;
+            }
+            
+            updateGlobalSummary() {
+                let totalFeuilles = 0;
+                let totalJoints = 0;
+                let totalArrets = 0;
+                let machinesWithData = 0;
+                
+                Object.values(this.machinesData).forEach(data => {
+                    if (data.current_stats) {
+                        totalFeuilles += data.current_stats.feuilles_jour || 0;
+                        totalJoints += data.current_stats.joints_jour || 0;
+                        totalArrets += data.current_stats.arrets_jour_min || 0;
+                        machinesWithData++;
+                    }
+                });
+                
+                document.getElementById('total-feuilles').textContent = totalFeuilles;
+                document.getElementById('total-joints').textContent = totalJoints;
+                document.getElementById('total-arrets').textContent = Math.round(totalArrets);
+                
+                // Calculer la performance moyenne (exemple simple)
+                const avgPerformance = machinesWithData > 0 ? Math.round((totalFeuilles / machinesWithData / 100) * 100) : 0;
+                document.getElementById('avg-performance').textContent = `${Math.min(avgPerformance, 100)}%`;
+            }
+            
+            updateTime() {
+                document.getElementById('current-time').textContent = new Date().toLocaleTimeString('fr-FR');
+            }
+            
+            startAutoUpdate() {
+                // Première mise à jour immédiate
+                this.updateAllMachines();
+                
+                // Puis mise à jour automatique
+                setInterval(() => {
+                    this.updateAllMachines();
+                }, this.updateInterval);
+            }
+        }
+        
+        // Démarrer le dashboard quand la page est chargée
+        document.addEventListener('DOMContentLoaded', () => {
+            new DashboardCentral();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+{
+  "timestamp": "2025-06-26T13:38:40.828616",
+  "machine_info": {
+    "id": "STATION_01",
+    "name": "Jointeuse Ligne 1",
+    "location": "L1",
+    "status": "online"
+  },
+  "current_stats": {
+    "feuilles_jour": 734,
+    "joints_jour": 5722,
+    "coupons_jour": 6456,
+    "arrets_jour_min": 68.4,
+    "feuilles_actuelles": 743,
+    "temps_arret_actuel": "01:08:50",
+    "last_update": "2025-06-26T13:38:40.828649"
+  },
+  "job_info": {
+    "job_number": 147424,
+    "job_details": {
+      "essence": "Walnut",
+      "coupe": "FLAT-CUT",
+      "dimension": "99' x 50'",
+      "agencement": "BOOK-MATCH",
+      "description": "TR-WALNUT-BM-99 X 50"
+    },
+    "current_palette": "DAN-BIRWE0535S",
+    "palette_list": [
+      "DAN-BIRWE0535S"
+    ]
+  },
+  "hourly_data": [
+    {
+      "heure": 7,
+      "joints": 896,
+      "coupons": 1027,
+      "feuilles": 131,
+      "duree_totale": 3193,
+      "arrets_reels_min": 4.7
+    },
+    {
+      "heure": 8,
+      "joints": 955,
+      "coupons": 1080,
+      "feuilles": 125,
+      "duree_totale": 3327,
+      "arrets_reels_min": 4.4
+    },
+    {
+      "heure": 9,
+      "joints": 603,
+      "coupons": 697,
+      "feuilles": 94,
+      "duree_totale": 2618,
+      "arrets_reels_min": 22.6
+    },
+    {
+      "heure": 10,
+      "joints": 898,
+      "coupons": 1019,
+      "feuilles": 121,
+      "duree_totale": 3307,
+      "arrets_reels_min": 6.8
+    },
+    {
+      "heure": 11,
+      "joints": 1025,
+      "coupons": 1148,
+      "feuilles": 123,
+      "duree_totale": 3325,
+      "arrets_reels_min": 4.7
+    },
+    {
+      "heure": 12,
+      "joints": 851,
+      "coupons": 949,
+      "feuilles": 98,
+      "duree_totale": 2902,
+      "arrets_reels_min": 11.9
+    },
+    {
+      "heure": 13,
+      "joints": 494,
+      "coupons": 536,
+      "feuilles": 42,
+      "duree_totale": 1524,
+      "arrets_reels_min": 13.3
+    }
+  ],
+  "projection": {
+    "hour": 13,
+    "current_feuilles": 42,
+    "projected_feuilles": 66,
+    "current_joints_moy": 11.8,
+    "projected_joints_moy": 11.8,
+    "current_arrets": 13.3,
+    "projected_arrets": 21.0,
+    "hour_progress": 0.6333333333333333
+  }
+}
